@@ -1,3 +1,8 @@
+"""LLM-based scoring pipeline for generated tags/lyrics vs. requirements.
+
+Spawns an Assistant with a `score` tool and computes per-aspect scores.
+"""
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
 from qwen_agent.agents.assistant import Assistant
@@ -8,7 +13,7 @@ import json5
 llm_config = {
     "model": "qwen-max-latest",
     "model_type": "qwen_dashscope",
-    "api_key": "sk-9d5bdec391cd4de3a44de8241d5ddb4b"
+    "api_key": ""  # NOTE: prefer setting via environment for security
 }
 
 prompt = '''Your are a song evalutating agent, your job is to score a pair of data (the lyrics and the tags) and to check how much they fit a certain requirement. There are five aspects for scoring the data:
@@ -40,6 +45,7 @@ class Score(BaseTool):
     }]
     
     def call(self, params, **kwargs):
+        """Record a numeric score for a given aspect in var_dict."""
         obj = json5.loads(params)
         kwargs['var_dict'][obj['aspect']] = int(obj['score'])
         return 'Score successfully set.'
@@ -51,6 +57,7 @@ agent = Assistant(
 )
 
 def score_data(data: dict, answer: str) -> tuple[int, str]:
+    """Run one scoring session and return collected aspect scores."""
     var_dict = {}
     _ = agent.run_nonstream([{
         'role': 'user',

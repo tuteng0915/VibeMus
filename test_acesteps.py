@@ -1,3 +1,5 @@
+"""ACE-Step quick test: generate and extend audio examples."""
+
 from pipeline import pipe
 #from qwen_audio import ask_qwen_audio
 with open('./example_lyrics.txt') as f:
@@ -15,7 +17,7 @@ result = pipe(
 
 filepath = result[0]
 '''
-filepath = './outputs/output_20250802145351_0.wav'
+filepath = './outputs/output_20250802145351_0.wav'  # example output path
 '''
 text = "please generate tags of the song, as many as possible."
 

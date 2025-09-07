@@ -1,3 +1,8 @@
+"""Demo dialog driver that role-plays a 'user' against the Assistant.
+
+Saves dialogs and generated tags/lyrics for qualitative inspection.
+"""
+
 import os
 from assistant import *
 from tools import *
@@ -22,6 +27,7 @@ class GetParam(BaseTool):
     }]
 
     def call(self, params, **kwargs) -> str:
+        """Return current value of a requested parameter (demo)."""
         obj = json5.loads(params)
         ret = kwargs['var_dict'].get(obj['name'], 'empty')
         return f'the value of the parameter {obj["name"]} is: \n\n {ret}'
@@ -32,6 +38,7 @@ class Halt(BaseTool):
     parameters = []
     
     def call(self, params, **kwargs) -> str:
+        """Signal the driver loop to stop further turns (demo)."""
         kwargs['var_dict']['halt'] = True
         return 'Successfully halted.'
 
@@ -46,6 +53,7 @@ user = Assistant(
 )
 
 def error_logging(fun):
+    """Decorator to append exceptions to a log file and continue."""
     def decorated(*args, **kwargs):
         try:
             ret = fun(*args, **kwargs)
@@ -58,6 +66,7 @@ def error_logging(fun):
 
 @error_logging
 def test_single_data(msg, data_id):
+    """Run limited dialog rounds to elicit tags/lyrics for one item."""
     vd = {
         'halt': False,
         'preference': ''

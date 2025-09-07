@@ -1,3 +1,5 @@
+"""Assistant wiring for control group 2 (experiment)."""
+
 from qwen_agent.agents import Assistant
 from tools import *
 

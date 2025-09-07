@@ -1,3 +1,8 @@
+"""Single-turn control test harness for group 2.
+
+Transforms requirements and saves dialogs and outputs.
+"""
+
 import os
 from assistant import *
 from tools import *
@@ -47,6 +52,7 @@ user = Assistant(
 )
 
 def test_single_data(msg, data_id):
+    """Run a single exchange and save artifacts for one item."""
     vd = {
         'halt': False,
         'preference': ''

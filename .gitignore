@@ -60,3 +60,7 @@ workspace/
 *.safetensors
 *.npy
 *.pt
+
+# Local secrets
+.env
+*.env

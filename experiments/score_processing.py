@@ -1,3 +1,5 @@
+"""Process score JSONs to compute stats and accepted sample IDs."""
+
 import json
 import matplotlib.pyplot as plt
 import numpy as np

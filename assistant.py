@@ -1,8 +1,27 @@
+"""Assistant bootstrap for VibeMus
+
+Configures the LLM-backed Assistant and exposes tool functions used by
+the chat UI to set parameters and modify audio.
+"""
+
+import os
 from qwen_agent.agents import Assistant
 from tools import *
+import json5
+from dotenv import load_dotenv
+
+# Load environment variables from .env if present
+load_dotenv()
 
 with open('agent_llm_config.json') as f:
     llm_config = json5.load(f)
+
+# Inject API key from environment to avoid hardcoding secrets in repo
+env_api = os.getenv('DASHSCOPE_API_KEY')
+if env_api:
+    llm_config['api_key'] = env_api
+elif not llm_config.get('api_key'):
+    print('[VibeMus] Warning: DASHSCOPE_API_KEY not set and no api_key in agent_llm_config.json. LLM calls may fail.')
 
 system_instruction = '''You are a song generating bot that generates and edits songs corresponding to the user's needs.
 

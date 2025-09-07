@@ -1,3 +1,5 @@
+"""Demo Assistant wiring for the demo scenario."""
+
 from qwen_agent.agents import Assistant
 from tools import *
 

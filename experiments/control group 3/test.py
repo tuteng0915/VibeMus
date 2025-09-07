@@ -1,3 +1,8 @@
+"""Multi-turn control test harness for group 3.
+
+Runs limited rounds and saves dialogs and outputs.
+"""
+
 import os
 from assistant import *
 from tools import *
@@ -46,6 +51,7 @@ user = Assistant(
 )
 
 def error_logging(fun):
+    """Decorator to append exceptions to a log file and continue."""
     def decorated(*args, **kwargs):
         try:
             ret = fun(*args, **kwargs)
@@ -58,6 +64,7 @@ def error_logging(fun):
 
 @error_logging
 def test_single_data(msg, data_id):
+    """Run limited rounds and save artifacts for one item."""
     vd = {
         'halt': False,
         'preference': ''

@@ -1,3 +1,5 @@
+"""Tools for control group 2 (experiment)."""
+
 import json5
 from qwen_agent.tools.base import BaseTool, register_tool
 from pydub import AudioSegment
@@ -17,6 +19,7 @@ all_tools = [
 class GetPreference(BaseTool):
     description = 'getting the user preference'
     def call(self, params, **kwargs) -> str:
+        """Return user's preference text (experiment)."""
         pref = kwargs['var_dict']['preference']
         if not pref or pref.isspace():
             return 'the user has not given their preferences yet.'
@@ -38,6 +41,7 @@ class SetParam(BaseTool):
     }]
 
     def call(self, params, **kwargs) -> str:
+        """Set `tags` or `lyrics` (experiment)."""
         obj = json5.loads(params)
         kwargs['var_dict'][obj['name']] = obj['value']
         return f'Successfully set the parameter {obj["name"]}'

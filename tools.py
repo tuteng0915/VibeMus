@@ -1,10 +1,16 @@
+"""Tool implementations for VibeMus Assistant.
+
+Defines tool functions the Assistant can call to read preferences,
+set parameters, transcribe audio, and perform repaint/edit/extend/clip.
+"""
+
 import json5
 from qwen_agent.tools.base import BaseTool, register_tool
 from pipeline import pipe
 import whisper_timestamped as wsp
 from pydub import AudioSegment
 
-wsp_model = wsp.load_model("medium")
+wsp_model = wsp.load_model("medium")  # loaded once; used by transcriptor
 all_tools = [
     'preference',
     'param_setter',
@@ -19,6 +25,7 @@ all_tools = [
 class GetPreference(BaseTool):
     description = 'getting the user preference'
     def call(self, params, **kwargs) -> str:
+        """Return user's preference text provided in UI state."""
         pref = kwargs['var_dict']['preference']
         if not pref or pref.isspace():
             return 'the user has not given their preferences yet.'
@@ -40,6 +47,7 @@ class SetParam(BaseTool):
     }]
 
     def call(self, params, **kwargs) -> str:
+        """Set `tags` or `lyrics` field in var_dict."""
         obj = json5.loads(params)
         kwargs['var_dict'][obj['name']] = obj['value']
         return f'Successfully set the parameter {obj["name"]}'
@@ -50,6 +58,7 @@ class Transcriptor(BaseTool):
     parameters = []
 
     def call(self, params, **kwargs) -> str:
+        """Transcribe current audio file and return timestamps + lyrics."""
         result = wsp.transcribe(wsp_model, kwargs['var_dict']['path'])
         return '### Lyrics\n\n'\
             + kwargs['var_dict']['lyrics']\
@@ -78,6 +87,7 @@ class SongRepaint(BaseTool):
     }]
 
     def call(self, params: str, **kwargs) -> str:
+        """Repaint a segment [start, end] using current tags/lyrics."""
         obj = json5.loads(params)
         start = obj['start']
         end = obj['end']
@@ -102,6 +112,7 @@ class SongEdit(BaseTool):
     parameters = []
 
     def call(self, params, **kwargs):
+        """Full-track edit using current tags/lyrics at same duration."""
         var_dict = kwargs['var_dict']
         curr_path = var_dict['path']
         lyrics = var_dict['lyrics']
@@ -133,6 +144,7 @@ class SongExtend(BaseTool):
     }]
 
     def call(self, params, **kwargs):
+        """Extend audio by adding time to front/back; asserts limits."""
         var_dict = kwargs['var_dict']
         obj = json5.loads(params)
         curr_path = var_dict['path']
@@ -170,6 +182,7 @@ class SongClip(BaseTool):
     }]
 
     def call(self, params, **kwargs):
+        """Clip current audio to [begin, end] seconds and update path."""
         var_dict = kwargs['var_dict']
         obj = json5.loads(params)
         curr_path = var_dict['path']

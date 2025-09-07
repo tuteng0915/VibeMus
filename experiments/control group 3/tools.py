@@ -1,3 +1,5 @@
+"""Tools for control group 3 (experiment)."""
+
 import json5
 from qwen_agent.tools.base import BaseTool, register_tool
 from pydub import AudioSegment

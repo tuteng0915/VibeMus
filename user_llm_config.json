@@ -1,5 +1,5 @@
 {
     "model": "qwen-max-latest",
     "model_type": "qwen_dashscope",
-    "api_key": "sk-a8db2e477d944330b6c862e282fbf8a9"
+    "api_key": ""
 }

@@ -1,6 +1,13 @@
+"""Automated dialog simulation between a 'user' agent and the Assistant.
+
+Used to generate/collect tags & lyrics and save conversation transcripts.
+"""
+
 from assistant import *
 from tools import *
 import json5
+import os
+from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 prompt = '''You are a player in a role-playing game. Your role is a user of a song generating dialogue agent, you should tell the agent your requirements about the song, but as a user, you should express your needs in a vague and non-professional way as a real human would do. You also shouldn't express all your needs in the first request, instead, do follow-up requests about your requirements when the agent asks you for further information. Specifically, you should say no more than a simple sentence for each reply.
@@ -21,6 +28,7 @@ class GetParam(BaseTool):
     }]
 
     def call(self, params, **kwargs) -> str:
+        """Return current value of a requested parameter."""
         obj = json5.loads(params)
         ret = kwargs['var_dict'].get(obj['name'], 'empty')
         return f'the value of the parameter {obj["name"]} is: \n\n {ret}'
@@ -31,11 +39,20 @@ class Halt(BaseTool):
     parameters = []
     
     def call(self, params, **kwargs) -> str:
+        """Signal the driver loop to stop further turns."""
         kwargs['var_dict']['halt'] = True
         return 'Successfully halted.'
 
+load_dotenv()
 with open('user_llm_config.json') as f:
     llm_config = json5.load(f)
+
+# Prefer environment variable over file to avoid hardcoding secrets
+env_api = os.getenv('DASHSCOPE_API_KEY')
+if env_api:
+    llm_config['api_key'] = env_api
+elif not llm_config.get('api_key'):
+    print('[VibeMus Test] Warning: DASHSCOPE_API_KEY not set and no api_key in user_llm_config.json. LLM calls may fail.')
 
 #'''
 user = Assistant(
@@ -58,6 +75,7 @@ vd = {
 
 
 def test_single_data(msg, data_id):
+    """Run a short back-and-forth to elicit tags/lyrics for one item."""
     print(f'test for {data_id} began')
     messages_for_u = [{
         'role': 'user',

@@ -1,3 +1,8 @@
+"""Single-turn control test harness for group 1.
+
+Transforms requirements into a request, runs one exchange, saves outputs.
+"""
+
 import os
 from assistant import *
 from tools import *
@@ -22,6 +27,7 @@ class GetParam(BaseTool):
     }]
 
     def call(self, params, **kwargs) -> str:
+        """Return requested parameter value (experiment)."""
         obj = json5.loads(params)
         ret = kwargs['var_dict'].get(obj['name'], 'empty')
         return f'the value of the parameter {obj["name"]} is: \n\n {ret}'
@@ -32,6 +38,7 @@ class Halt(BaseTool):
     parameters = []
     
     def call(self, params, **kwargs) -> str:
+        """Signal the driver loop to stop further turns (experiment)."""
         kwargs['var_dict']['halt'] = True
         return 'Successfully halted.'
 
@@ -45,6 +52,7 @@ user = Assistant(
     function_list=['param_getter', 'halt'],
 )
 def error_logging(fun):
+    """Decorator to append exceptions to a log file and continue."""
     def decorated(*args, **kwargs):
         try:
             ret = fun(*args, **kwargs)
@@ -57,6 +65,7 @@ def error_logging(fun):
 
 @error_logging
 def test_single_data(msg, data_id):
+    """Run a single exchange and save artifacts for one item."""
     vd = {
         'halt': False,
         'preference': ''
