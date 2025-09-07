@@ -115,6 +115,8 @@ class SongEdit(BaseTool):
         """Full-track edit using current tags/lyrics at same duration."""
         var_dict = kwargs['var_dict']
         curr_path = var_dict['path']
+        if curr_path == '' or curr_path == 'blank.wav':
+            return 'The song is not generated yet, so this tool is currently not available.'
         lyrics = var_dict['lyrics']
         length = AudioSegment.from_file(curr_path).duration_seconds
         tags = var_dict['tags']

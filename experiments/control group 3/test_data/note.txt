@@ -1,1 +1,0 @@
-all data with a score >= 25 in `result.json` are to be used in testing.
