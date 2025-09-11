@@ -2,9 +2,20 @@
 
 from qwen_agent.agents import Assistant
 from tools import *
+from dotenv import load_dotenv
+import os
 
 with open('agent_llm_config.json') as f:
     llm_config = json5.load(f)
+
+
+load_dotenv()
+
+env_api = os.getenv('DASHSCOPE_API_KEY')
+if env_api:
+    llm_config['api_key'] = env_api
+elif not llm_config.get('api_key'):
+    print('[VibeMus Test] Warning: DASHSCOPE_API_KEY not set and no api_key in user_llm_config.json. LLM calls may fail.')
 
 system_instruction = '''You are a song generating bot that generates and edits songs corresponding to the user's needs.
 

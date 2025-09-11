@@ -4,13 +4,13 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-with open('score of demo.json') as f:
+with open('data/score of demo.json') as f:
     demo = json.load(f)
 
-with open('score of control group 1.json') as f:
+with open('data/score of control group 1.json') as f:
     control1 = json.load(f)
 
-with open('score of control group 2.json') as f:
+with open('data/score of control group 2.json') as f:
     control2 = json.load(f)
 
 avgd = []
@@ -39,5 +39,5 @@ print(f'control group 1: avg={np.mean(avg1)}, std={np.std(avg1)}')
 
 print(f'control group 2: avg={np.mean(avg2)}, std={np.std(avg2)}')
 
-with open('accepted.json', 'w') as f:
+with open('data/accepted.json', 'w') as f:
     json.dump(accepted, f)

@@ -9,12 +9,19 @@ from qwen_agent.agents.assistant import Assistant
 from qwen_agent.tools.base import BaseTool, register_tool
 import json
 import json5
+from dotenv import load_dotenv
 
-llm_config = {
-    "model": "qwen-max-latest",
-    "model_type": "qwen_dashscope",
-    "api_key": ""  # NOTE: prefer setting via environment for security
-}
+load_dotenv()
+
+with open('../user_llm_config.json') as f:
+    llm_config = json5.load(f)
+
+# Prefer environment variable over file to avoid hardcoding secrets
+env_api = os.getenv('DASHSCOPE_API_KEY')
+if env_api:
+    llm_config['api_key'] = env_api
+elif not llm_config.get('api_key'):
+    print('[VibeMus Test] Warning: DASHSCOPE_API_KEY not set and no api_key in user_llm_config.json. LLM calls may fail.')
 
 prompt = '''Your are a song evalutating agent, your job is to score a pair of data (the lyrics and the tags) and to check how much they fit a certain requirement. There are five aspects for scoring the data:
 
@@ -81,10 +88,10 @@ def score_data(data: dict, answer: str) -> tuple[int, str]:
     print(f'{data['id']} somehow has no score available')
     return {}, data['id']
 
-with open("data.jsonl") as f:
+with open("data/data.jsonl") as f:
     all_data = [json.loads(i) for i in f]
 
-with open('result.json') as f:
+with open('data/result.json') as f:
     result = json.load(f)
 
 groups = [
@@ -125,8 +132,8 @@ for curr_group in groups:
             scores[d_id] = score
             count += 1
             if count % 10 == 0:
-                with open(f'score of {curr_group}.json', 'w') as f:
+                with open(f'data/score of {curr_group}.json', 'w') as f:
                     json.dump(scores, f)
-        with open(f'score of {curr_group}.json', 'w') as f:
+        with open(f'data/score of {curr_group}.json', 'w') as f:
             json.dump(scores, f)
         # label_score = {i: sum(j)/len(j) for i, j in label_scores.items() if len(j) > 0}

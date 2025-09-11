@@ -45,6 +45,13 @@ class Halt(BaseTool):
 with open('user_llm_config.json') as f:
     llm_config = json5.load(f)
 
+load_dotenv()
+
+env_api = os.getenv('DASHSCOPE_API_KEY')
+if env_api:
+    llm_config['api_key'] = env_api
+elif not llm_config.get('api_key'):
+    print('[VibeMus Test] Warning: DASHSCOPE_API_KEY not set and no api_key in user_llm_config.json. LLM calls may fail.')
 #'''
 user = Assistant(
     llm=llm_config,
@@ -72,7 +79,7 @@ def test_single_data(msg, data_id):
     print(f'test for {data_id} user responsed')
     messages_for_u.extend(response)
     curr = '\n'.join(i['content'] for i in response)
-    with open(f'test_data/transformed/{data_id}', 'w', encoding='utf-8') as f:
+    with open(f'../data/transformed/{data_id}', 'w', encoding='utf-8') as f:
         f.write(curr)
     dialog_for_saving.append('User : \n' + curr)
     messages_for_a.append({
@@ -100,10 +107,10 @@ def test_single_data(msg, data_id):
         )
 #'''
 
-with open("test_data/data.jsonl") as f:
+with open("../data/data.jsonl") as f:
     all_data = [json5.loads(i) for i in f]
 
-with open('test_data/result.json') as f:
+with open('../data/result.json') as f:
     result = json5.load(f)
 
 count = 0

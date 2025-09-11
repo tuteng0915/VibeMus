@@ -10,6 +10,8 @@ from tools import *
 import json5
 from dotenv import load_dotenv
 
+print('[VibeMus] Info: Begin loading the agent')
+
 # Load environment variables from .env if present
 load_dotenv()
 
@@ -52,4 +54,6 @@ assistant = Assistant(
     system_message=system_instruction,
     function_list=all_tools,
 )
+
+print('[VibeMus] Info: Agent successfully loaded')
 #'''

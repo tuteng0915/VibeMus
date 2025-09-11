@@ -30,8 +30,7 @@ def run(message, history, prof, aout, lyr, tg, pth):
         'role': 'user',
         'content': message
     })
-    for response in assistant.run(messages=copy, var_dict=var_dict):
-        ...
+    response = assistant.run_nonstream(messages=copy, var_dict=var_dict)
     new_lyr = var_dict['lyrics']
     new_tg = var_dict['tags']
     new_aout = var_dict['path']

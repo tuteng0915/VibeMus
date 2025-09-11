@@ -8,7 +8,7 @@ from assistant import *
 from tools import *
 import json5
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
+from dotenv import load_dotenv
 prompt = '''You are a player in a role-playing game. Your role is a user of a song generating dialogue agent, and your goal is to have the song agent generate a song that meets your requirements. You should tell the agent your requirements about the song, but as a user, you should express your needs in a vague and non-professional way as a real human would do. You also shouldn't express all your needs in the first request, instead, do follow-up requests about your requirements when the agent asks you for further information. Specifically, you should say no more than a simple sentence for each reply.
 
 Meanwhile, the user's role is the song agent, it will respond you and generate the lyrics and the tags of the song, you will be able to retrieve them via the "param_getter" tool after the agent generated them. When the generating agent asks you about details of the song, you can either make up some information or simply claim that it's irrelevant. When you feel the song is perfect, use the "halt" tool to terminate the process, this is the equivalent of the "generate" button that the song generating agent mentions.
@@ -44,6 +44,15 @@ class Halt(BaseTool):
 
 with open('user_llm_config.json') as f:
     llm_config = json5.load(f)
+
+
+load_dotenv()
+
+env_api = os.getenv('DASHSCOPE_API_KEY')
+if env_api:
+    llm_config['api_key'] = env_api
+elif not llm_config.get('api_key'):
+    print('[VibeMus Test] Warning: DASHSCOPE_API_KEY not set and no api_key in user_llm_config.json. LLM calls may fail.')
 
 #'''
 user = Assistant(
@@ -118,10 +127,10 @@ def test_single_data(msg, data_id):
             '\n'.join(dialog_for_saving)
         )
 #'''
-with open("test_data/data.jsonl") as f:
+with open("../data/data.jsonl") as f:
     all_data = [json5.loads(i) for i in f]
 
-with open('test_data/result.json') as f:
+with open('../data/result.json') as f:
     result = json5.load(f)
 
 count = 0
@@ -132,7 +141,7 @@ with ThreadPoolExecutor(8) as executor:
     for i in all_data:
         if result.get(i['id'], 0) < 25:
             continue
-        with open(f'test_data/transformed/{i['id']}', encoding='utf-8') as f:
+        with open(f'../data/transformed/{i['id']}', encoding='utf-8') as f:
             requirement = f.read()
         executor.submit(test_single_data, requirement, i['id'])
     for future in as_completed(futures):

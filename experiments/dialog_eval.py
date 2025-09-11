@@ -8,7 +8,7 @@ import json5
 from dotenv import load_dotenv
 
 load_dotenv()
-with open('user_llm_config.json') as f:
+with open('../user_llm_config.json') as f:
     llm_config = json5.load(f)
 
 # Prefer environment variable over file to avoid hardcoding secrets
@@ -18,16 +18,34 @@ if env_api:
 elif not llm_config.get('api_key'):
     print('[VibeMus Test] Warning: DASHSCOPE_API_KEY not set and no api_key in user_llm_config.json. LLM calls may fail.')
 
-prompt = '''Your are a data assessing agent, your job is to assess a user-agent dialog according to a given requirement. The agent in the dialog is a song generating agent, and the user in the dialog is to use the agent to generate a song that fits the requirement. Your goal is to determine how many different points of the requirement are mentioned in the dialog. Specifically you should:
+prompt = '''Your are a data assessing agent, your job is to assess a user-agent dialog according to a given requirement. The agent in the dialog is a song generating agent, and the user in the dialog is to use the agent to generate a song that fits the requirement. Your goal is to determine how many different elements of the requirement are mentioned in the dialog. Specifically you should:
 
-1. split the requirement in to different simple points of need, those points eventually add up to the whole requirement;
-2. determine whether each point has occurred in the dialog.
+1. split the requirement in to different simple elements of need, those elements eventually add up to the whole requirement;
+2. determine whether each element has occurred in the dialog.
+
+For each element of need, you should categorize it into one of the following five aspects:
+
+- Genre: check how the tags and lyrics fit the genre required in the requirement;
+- Time Period: check how the flavor of tags and lyrics fit the corresponding time period;
+- Story/Lyric Description: check if the requirement about lyrics (e.g. the story) is satisfied;
+- Vocals: check if the tags fits the corresponding vocal requirement;
+- Composition: check if the lyric structure fits the composition requirement. 
 
 the user input will be in the following format:
 
-- the first user input will be the requirement, after that you should split the requirement in to different points, each represented with a keyword or short phrase. For each keyword / short phrase, invoke the "record_keyword" tool to record it.
-- each of the following input will be a pair of user input and agent response. For each point that is mentioned in this round of dialog, invoke the "record_occurrence" tool with the corresponding keyword mentioned in step 1 to record it.
+- the first user input will be the requirement, after that you should split the requirement in to different elements, each represented with a keyword or short phrase. For each keyword / short phrase, invoke the "record_keyword" tool to record it.
+- each of the following input will be as following:
+  - a line of reminder beginning with "Keywords: ", followed by all the recorded keywords;
+  - an agent input beginning with a line of "Agent : " (only appears if it's not the first round of the process), and a user input/response beginning with a line of "User : ". For each element that is mentioned in this round of dialog, invoke the "record_occurrence" tool with the corresponding keyword mentioned in step 1 to record it.
 '''
+
+aspects = {
+    'Genre',
+    'Time Period',
+    'Story/Lyric Description',
+    'Vocals',
+    'Composition'
+}
 
 @register_tool("record_keyword")
 class RecordKeyword(BaseTool):
@@ -35,8 +53,12 @@ class RecordKeyword(BaseTool):
     parameters = [{
         "name": "keyword",
         "type": "string",
-        "description": 'The keyword / short phrase for the point of need',
+        "description": 'The keyword / short phrase for the element of need',
         "required": True,
+    },{
+        "name": "aspect",
+        "type": "string",
+        "description": 'the corresponding aspect of the element of need, one of the following: "Genre", "Time Period", "Story/Lyric Description", "Vocals" and "Composition"'
     }]
     
     def call(self, params, **kwargs):
@@ -45,19 +67,22 @@ class RecordKeyword(BaseTool):
         if var_dict['round'] > 0:
             return 'when assessing the dialog, you don\'t need to record any keywords.'
         new_kw = obj['keyword']
+        asp = obj['aspect']
         if new_kw in var_dict['occurrence']:
             return f'keyword "{new_kw}" already recorded.'
-        var_dict['keywords'].append(new_kw)
+        if asp not in aspects:
+            return f'there is no "{asp}" aspect'
+        var_dict['keywords'][new_kw] = asp
         var_dict['occurrence'][new_kw] = -1
         return f'keyword {new_kw} successfully recorded.'
 
 @register_tool("record_occurrence")
 class RecordKeyword(BaseTool):
-    description = "The tool for point occurrence recording."
+    description = "The tool for element occurrence recording."
     parameters = [{
         "name": "keyword",
         "type": "string",
-        "description": 'The keyword / short phrase for the occurred point of need',
+        "description": 'The keyword / short phrase for the occurred element of need',
         "required": True,
     }]
     
@@ -84,20 +109,16 @@ agent = Assistant(
 def score_data(data: dict, dialog: str) -> tuple[dict, str]:
     print(f'assessment began for {data['id']}')
     var_dict = {
-        "keywords": [],
+        "keywords": {},
         "occurrence": {},
         'round': 0,
     }
     lst = []
     curr = []
-    flag = False
     for line in dialog.split('\n'):
-        if line == 'User : ':
-            if flag:
-                lst.append('\n'.join(curr))
-                curr = []
-            else:
-                flag = True
+        if line == 'Agent : ':
+            lst.append('\n'.join(curr))
+            curr = []
         curr.append(line)
     lst.append('\n'.join(curr))
     history = [{
@@ -110,24 +131,24 @@ def score_data(data: dict, dialog: str) -> tuple[dict, str]:
         var_dict['round'] += 1
         history.append({
             'role': 'user',
-            'content': pair,
+            'content': 'Keywords: ' + ', '.join(var_dict['keywords'].keys()) + '\n' + pair,
         })
         response = agent.run_nonstream(history, var_dict=var_dict)
         history.extend(response)
-    return var_dict['occurrence'], data['id']
+    return var_dict, data['id']
 
-with open("data.jsonl") as f:
+with open("data/data.jsonl") as f:
     all_data = [json.loads(i) for i in f]
 
-with open('result.json') as f:
+with open('data/result.json') as f:
     result = json.load(f)
 
 curr_group = 'demo'
 
 
-occurred_total = 0
+total = {i: 0 for i in aspects}
 count = 0
-result_diff = [0 for _ in range(11)]
+result_diff = {i: [0 for _ in range(11)] for i in aspects}
 
 with ThreadPoolExecutor(8) as executor:
     futures = []
@@ -147,23 +168,25 @@ with ThreadPoolExecutor(8) as executor:
         futures.append(executor.submit(score_data, i, dialog))
     for future in as_completed(futures):
         curr, d_id = future.result()
-        for v in curr.values():
-            occurred_total += 1
-            if v == -1:
+        kw = curr['keywords']
+        occ = curr['occurrence']
+        for k in curr['keywords'].keys():
+            total[kw[k]] += 1
+            if occ[k] == -1:
                 continue
-            result_diff[v] += 1
+            result_diff[kw[k]][occ[k]] += 1
         count += 1
         if count % 10 == 0:
             print(f'{count} assessments done.')
-            with open(f'dialog eval of {curr_group}.json', 'w') as f:
+            with open(f'data/dialog eval of {curr_group}.json', 'w') as f:
                 json.dump({
-                    'total': occurred_total,
+                    'total': total,
                     'diff': result_diff,
                 }, f)
-    with open(f'dialog eval of {curr_group}.json', 'w') as f:
+    with open(f'data/dialog eval of {curr_group}.json', 'w') as f:
         print(f'all assessments done.')
         json.dump({
-            'total': occurred_total,
+            'total': total,
             'diff': result_diff,
         }, f)
 #'''
