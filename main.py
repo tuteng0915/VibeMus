@@ -3,15 +3,39 @@
 Chat-driven interface for song creation/editing and a demo preview panel.
 """
 
-import gradio as gr
-from pipeline import pipe
-# from qwen_audio import ask_qwen_audio
-from assistant import assistant
 import os
 
-# Constants
+import gradio as gr
+
+from assistant import assistant
+from history import (
+    ensure_history_storage,
+    find_history_entry_by_display,
+    log_audio_snapshot,
+    read_history_entries,
+)
+from pipeline import pipe
+# from qwen_audio import ask_qwen_audio
+
 # Directory containing curated example dialogs for quick preview in UI
 DEMO_DIALOG_DIR = os.path.join('experiments', 'demo', 'test_data', 'dialogs')
+
+
+def _history_dropdown_state(selected=None):
+    entries = list(reversed(read_history_entries()))
+    choices = [entry['display'] for entry in entries]
+    value = None
+    if selected and selected in choices:
+        value = selected
+    elif choices:
+        value = choices[0]
+    return choices, value
+
+
+def _history_dropdown_update(selected=None):
+    choices, value = _history_dropdown_state(selected)
+    return gr.update(choices=choices, value=value)
+ensure_history_storage()
 
 def run(message, history, prof, aout, lyr, tg, pth):
     """Chat handler bridging UI and Assistant tools.
@@ -34,7 +58,21 @@ def run(message, history, prof, aout, lyr, tg, pth):
     new_lyr = var_dict['lyrics']
     new_tg = var_dict['tags']
     new_aout = var_dict['path']
-    return response, new_lyr, new_tg, (new_aout if new_aout != '' else 'blank.wav'), new_aout
+    dropdown_update = None
+    if new_aout and new_aout not in ('', 'blank.wav') and new_aout != pth:
+        entry = log_audio_snapshot(new_aout, new_lyr, new_tg)
+        if entry:
+            dropdown_update = _history_dropdown_update(entry['display'])
+    if dropdown_update is None:
+        dropdown_update = _history_dropdown_update()
+    return (
+        response,
+        new_lyr,
+        new_tg,
+        (new_aout if new_aout != '' else 'blank.wav'),
+        new_aout,
+        dropdown_update,
+    )
 
 with gr.Blocks() as demo:
     gr.Markdown("""
@@ -48,6 +86,14 @@ with gr.Blocks() as demo:
             generate_btn = gr.Button("Generate")
             length = gr.Slider(30, 300, step=1, label='length', interactive=True)
             audio_output = gr.Audio(label="audio output", interactive=False)
+            init_choices, init_value = _history_dropdown_state()
+            history_dropdown = gr.Dropdown(
+                label="History",
+                choices=init_choices,
+                value=init_value,
+                interactive=True,
+            )
+            load_history_btn = gr.Button("Load History Entry")
             with gr.Accordion(label="user preference", open=False):
                 audio_input = gr.Audio(sources='upload', label="input preference")
                 profile = gr.TextArea(label="profile", interactive=True)
@@ -58,7 +104,7 @@ with gr.Blocks() as demo:
                 run,
                 type='messages',
                 additional_inputs=[profile, audio_output, lyrics, tags, path_name],
-                additional_outputs=[lyrics, tags, audio_output, path_name],
+                additional_outputs=[lyrics, tags, audio_output, path_name, history_dropdown],
                 fill_height=True
             )
 
@@ -89,7 +135,7 @@ with gr.Blocks() as demo:
                     except Exception as e:
                         return f'Failed to load example: {e}'
 
-    @generate_btn.click(inputs=[lyrics, tags, length], outputs=[audio_output, path_name])
+    @generate_btn.click(inputs=[lyrics, tags, length], outputs=[audio_output, path_name, history_dropdown])
     def generate_music(lyr, tg, lth):
         """Run ACE-Step pipeline to synthesize audio from tags/lyrics."""
         outputs = pipe(
@@ -98,8 +144,20 @@ with gr.Blocks() as demo:
             prompt=tg,
             lyrics=lyr,
         )
-        # print(outputs)
-        return outputs[0], outputs[0]
+        entry = log_audio_snapshot(outputs[0], lyr, tg, duration=lth)
+        dropdown_update = _history_dropdown_update(entry['display'] if entry else None)
+        return outputs[0], outputs[0], dropdown_update
+
+    @load_history_btn.click(inputs=[history_dropdown], outputs=[lyrics, tags, audio_output, path_name])
+    def load_history(selected):
+        """Load lyrics/tags/audio from a saved history entry."""
+        if not selected:
+            return gr.update(), gr.update(), gr.update(), gr.update()
+        entry = find_history_entry_by_display(selected)
+        if not entry:
+            return gr.update(), gr.update(), gr.update(), gr.update()
+        audio_path = entry['audio_path']
+        return entry['lyrics'], entry['tags'], audio_path, audio_path
 
     @update_btn.click(inputs=[audio_input, chatbot, lyrics, tags, profile], outputs=profile)
     def baz(audio, chat, lyr, tg, old_profile):
@@ -108,5 +166,6 @@ with gr.Blocks() as demo:
 
     # gr.Markdown("# Test")
 
-demo.launch(share=True, server_name='0.0.0.0')
-
+demo.launch(server_name='0.0.0.0',
+            server_port=7860,
+            share=False)

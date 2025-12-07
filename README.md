@@ -18,6 +18,14 @@
 
 **Core Idea:** Abstract complex and professional music generation parameters and operations, allowing users to **focus on creative expression** without needing to understand the technical details of underlying models or tedious parameter adjustments. The LLM acts as a music-savvy, tech-savvy "intelligent assistant" and "translator".
 
+## 🧩 Running Modes
+
+- **Gradio UI (default):** `python main.py` launches the full chat interface. Every time you hit **Generate** or the assistant produces new audio, the take is automatically copied into `history/` and becomes selectable via the History dropdown.
+- **Backend-only API:** `python backend_server.py` (or `uvicorn backend_server:app --host 0.0.0.0 --port 8000`) exposes a FastAPI service for headless deployments. Key endpoints:
+  - `POST /api/chat` – mirrors the chat workflow; send `{message, history, preference, lyrics, tags, path}` and get the assistant reply plus updated song state.
+  - `POST /api/generate` – generate audio directly from `{lyrics, tags, length}`.
+  - `GET /api/history` / `GET /api/history/{id}` / `GET /api/history/{id}/audio` – enumerate or download past takes; everything shares the same storage as the UI History panel.
+
 ## 🖥 Showcase (Screenshots / GIFs / Video)
 
 ### Example 1
@@ -306,10 +314,6 @@ I think we're ready to generate the song now. Let's create this epic metal maste
 ```bash
 python main.py
 ```
-
-## Demonstration
-
-
 
 
 ## 🔐 Configuration & Secrets

@@ -7,7 +7,7 @@ with open('./example_lyrics.txt') as f:
 
 with open('./example_tags.txt') as f:
     tags = f.read()
-'''
+#'''
 result = pipe(
     format='wav',
     audio_duration=32,
@@ -19,9 +19,9 @@ filepath = result[0]
 '''
 filepath = './outputs/output_20250802145351_0.wav'  # example output path
 '''
-text = "please generate tags of the song, as many as possible."
+# text = "please generate tags of the song, as many as possible."
 
-print(ask_qwen_audio(filepath, text))
+# print(ask_qwen_audio(filepath, text))
 '''
 result = pipe(
     task='extend',
@@ -32,5 +32,6 @@ result = pipe(
     repaint_end=49.0,
     src_audio_path=filepath
 )
+# '''
 
 
