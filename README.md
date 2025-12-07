@@ -25,6 +25,8 @@
   - `POST /api/chat` – mirrors the chat workflow; send `{message, history, preference, lyrics, tags, path}` and get the assistant reply plus updated song state.
   - `POST /api/generate` – generate audio directly from `{lyrics, tags, length}`.
   - `GET /api/history` / `GET /api/history/{id}` / `GET /api/history/{id}/audio` – enumerate or download past takes; everything shares the same storage as the UI History panel.
+- **Unified History panel:** The UI and backend now share a single History list (prefilled with the demo songs). You can assign nicknames to each take, reload the full state (lyrics, tags, audio), view the chat transcript that produced it, and keep iterating from any saved point.
+- **Outputs integration:** All audio files (demos, previously generated outputs, and new takes) are copied into `history/audio/` along with links to their `_input_params.json`, so the History panel fully owns the artifacts it previews and restores.
 
 ## 🖥 Showcase (Screenshots / GIFs / Video)
 

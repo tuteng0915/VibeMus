@@ -1,1 +1,131 @@
-[]
+[
+  {
+    "id": "demo_bmerqe",
+    "timestamp": "20251207_170641",
+    "label": "[verse]",
+    "lyrics": "[verse]\nIn the quiet room where shadows play,\nAn old man lies, his hair turned gray.\nMemories flicker, like lights that fade,\nWithin the walls where time has stayed.\n\n[chorus]\nDo you remember, the days gone by?\nWhen dreams were young and spirits high.\nWith every note, her voice takes flight,\nA marching band ignites the night.\n\n[bridge]\nFlashbacks dance, of laughter sweet,\nOf battles fought and hearts that beat.\nDancing on a hillside under skies so wide,\nThrough fields of gold, through stormy weather,\nMoments cherished, binding us forever.",
+    "tags": "bittersweet, powerful, ethereal, piano, strings, marching band, moderate tempo, Florence and the Machine style",
+    "audio_path": "history/audio/20251207_170641_verse.wav",
+    "duration": 59.9075,
+    "nickname": "Demo bmerqe",
+    "metadata": {
+      "source": "demo",
+      "demo_id": "bmerqe"
+    },
+    "display": "20251207_170641 - Demo bmerqe"
+  },
+  {
+    "id": "demo_pd1qwq",
+    "timestamp": "20251207_170641",
+    "label": "[chorus]",
+    "lyrics": "[chorus]\nThe one I'm missing is you\nIn every moment, in all I do\nI feel your absence anew\nWishing you were here, too\n\n[verse]\nWalking down these lonely streets\nMemories linger where we used to meet\nEvery corner holds a trace of you\nA silhouette against the sky so blue\n\n[bridge]\nTime moves on, but it doesn't heal\nThe void remains, an open seal\nHoping someday our paths will cross again\nUntil then, my heart won't settle or bend",
+    "tags": "mellow, pop, R&B, 90s, contemporary, smooth, soulful, backing vocals, harmonies, yeah-yeah background, xylophone, marimba",
+    "audio_path": "history/audio/20251207_170641_chorus.wav",
+    "duration": 59.9075,
+    "nickname": "Demo pd1qwq",
+    "metadata": {
+      "source": "demo",
+      "demo_id": "pd1qwq"
+    },
+    "display": "20251207_170641 - Demo pd1qwq"
+  },
+  {
+    "id": "demo_pqhby2",
+    "timestamp": "20251207_170641",
+    "label": "[verse]",
+    "lyrics": "[verse]\nIn the heart of winter's embrace,\nA lone wolf howls, lost in space.\nSnowflakes fall, silent and cold,\nSolitude's tale, never told.\n\n[chorus]\nRise from the ashes, soar so high,\nBeneath the stormy sky.\nFeel the thunder, hear the cry,\nOf battles we cannot deny.\n\n[verse]\nContrasts collide in frosty air,\nShadows dance without a care.\nWhispers of warmth in icy veins,\nA fleeting moment, love remains.\n\n[chorus]\nRise from the ashes, soar so high,\nBeneath the stormy sky.\nFeel the thunder, hear the cry,\nOf battles we cannot deny.\n\n[bridge]\nThe calm before the storm arrives,\nSilent whispers break the ties.\nExplosions echo through the night,\nAs dawn breaks, we stand united.\n\n[chorus]\nRise from the ashes, soar so high,\nBeneath the stormy sky.\nFeel the thunder, hear the cry,\nOf battles we cannot deny.",
+    "tags": "epic metal, orchestral, fast tempo, powerful drums, soaring strings, snowy forest, solitude, contrast, emotional, explosive climax, clean vocals, metal screaming",
+    "audio_path": "history/audio/20251207_170641_verse.wav",
+    "duration": 59.9075,
+    "nickname": "Demo pqhby2",
+    "metadata": {
+      "source": "demo",
+      "demo_id": "pqhby2"
+    },
+    "display": "20251207_170641 - Demo pqhby2"
+  },
+  {
+    "id": "output_output_20250913154022_0",
+    "timestamp": "20251207_185329",
+    "label": "[verse]",
+    "lyrics": "[verse]\nNeon lights they flicker bright\nCity hums in dead of night\nRhythms pulse through concrete veins\nLost in echoes of refrains\n\n[verse]\nBassline groovin' in my chest\nHeartbeats match the city's zest\nElectric whispers fill the air\nSynthesized dreams everywhere\n\n[chorus]\nTurn it up and let it flow\nFeel the fire let it grow\nIn this rhythm we belong\nHear the night sing out our song\n\n[verse]\nGuitar strings they start to weep\nWake the soul from silent sleep\nEvery note a story told\nIn this night we’re bold and gold\n\n[bridge]\nVoices blend in harmony\nLost in pure cacophony\nTimeless echoes timeless cries\nSoulful shouts beneath the skies\n\n[verse]\nKeyboard dances on the keys\nMelodies on evening breeze\nCatch the tune and hold it tight\nIn this moment we take flight\n\n",
+    "tags": "funk, pop, soul, rock, melodic, guitar, drums, bass, keyboard, percussion, 105 BPM, energetic, upbeat, groovy, vibrant, dynamic\n",
+    "audio_path": "history/audio/output_output_20250913154022_0.wav",
+    "duration": 32,
+    "metadata": {
+      "source": "output",
+      "input_params_path": "outputs/output_20250913154022_0_input_params.json"
+    },
+    "display": "20251207_185329 - [verse]"
+  },
+  {
+    "id": "output_output_20250913154846_0",
+    "timestamp": "20251207_185329",
+    "label": "[verse]",
+    "lyrics": "[verse]\nOn a ferris wheel, we soared so high\nThe world below, under starlit sky\nI gave you a rose, our hearts aligned\nLittle did we know, fate would unwind\n\n[chorus]\nWhy did reality tear us apart?\nLeaving scars that won't heal or start\nI need something to fuel my fight\nYet all I feel is this endless night\n\n[verse]\nNow every spin feels like a fall\nWithout your laughter, without it all\nStress from the world tore us asunder\nDreams we had, shattered like thunder\n\n[chorus]\nWhy did reality tear us apart?\nLeaving scars that won't heal or start\nI need something to fuel my fight\nYet all I feel is this endless night\n\n[bridge]\nSomeday I'll ride that ferris wheel again\nHold another rose, find love not pain\nUntil then, in sorrow I confide\nMemories linger, where dreams reside\n\n[chorus]\nWhy did reality tear us apart?\nLeaving scars that won't heal or start\nI need something to fuel my fight\nYet all I feel is this endless night",
+    "tags": "sad, melancholic, emotional piano, soft strings, acoustic guitar, heartfelt vocals",
+    "audio_path": "history/audio/output_output_20250913154846_0.wav",
+    "duration": 150,
+    "metadata": {
+      "source": "output",
+      "input_params_path": "outputs/output_20250913154846_0_input_params.json"
+    },
+    "display": "20251207_185329 - [verse]"
+  },
+  {
+    "id": "output_output_20250913160206_0",
+    "timestamp": "20251207_185329",
+    "label": "[verse]",
+    "lyrics": "[verse]\nI've been lost in the echoes of your words\nCut deeper than any blade, left me in pain\nYou took my heart and threw it away\nLeft me here with nothing to say\n\n[chorus]\nBut I'll rise from these ashes, find my way back home\nI am more than your cruel goodbye, I'll never be alone\nWith every tear, I'll water the seeds of a brand new start\nAnd though you're gone, I'll heal this broken heart\n\n[verse]\nEvery scar tells a story of who I used to be\nBut now I'm writing chapters you'll never take from me\nI won't let your shadow darken my skies anymore\nI'll walk into the sunrise, leave you on the shore\n\n[chorus]\nBut I'll rise from these ashes, find my way back home\nI am more than your cruel goodbye, I'll never be alone\nWith every tear, I'll water the seeds of a brand new start\nAnd though you're gone, I'll heal this broken heart\n\n[bridge]\nThis pain will pass, like everything does\nI'll find strength in the cracks, become enough\nYour harsh words won't define me, they'll fade away\nI'll dance in the rain, find joy in each day\n\n[chorus]\nI'll rise from these ashes, find my way back home\nI am more than your cruel goodbye, I'll never be alone\nWith every tear, I'll water the seeds of a brand new start\nAnd though you're gone, I'll heal this broken heart\n\n[outro]\nThe sun will shine again, brighter than before\nI'll open up my wings and soar",
+    "tags": "sad,comforting,acoustic,guitar,soft vocals",
+    "audio_path": "history/audio/output_output_20250913160206_0.wav",
+    "duration": 30,
+    "metadata": {
+      "source": "output",
+      "input_params_path": "outputs/output_20250913160206_0_input_params.json"
+    },
+    "display": "20251207_185329 - [verse]"
+  },
+  {
+    "id": "output_output_20250913160420_0",
+    "timestamp": "20251207_185329",
+    "label": "[verse]",
+    "lyrics": "[verse]\nI've been lost in the echoes of your words\nCut deeper than any blade, left me in pain\nYou took my heart and threw it away\nLeft me here with nothing to say\n\n[chorus]\nBut I'll rise from these ashes, find my way back home\nI am more than your cruel goodbye, I'll never be alone\nWith every tear, I'll water the seeds of a brand new start\nAnd though you're gone, I'll heal this broken heart\n\n[verse]\nEvery scar tells a story of who I used to be\nBut now I'm writing chapters you'll never take from me\nI won't let your shadow darken my skies anymore\nI'll walk into the sunrise, leave you on the shore\n\n[chorus]\nBut I'll rise from these ashes, find my way back home\nI am more than your cruel goodbye, I'll never be alone\nWith every tear, I'll water the seeds of a brand new start\nAnd though you're gone, I'll heal this broken heart\n\n[bridge]\nThis pain will pass, like everything does\nI'll find strength in the cracks, become enough\nYour harsh words won't define me, they'll fade away\nI'll dance in the rain, find joy in each day\n\n[chorus]\nI'll rise from these ashes, find my way back home\nI am more than your cruel goodbye, I'll never be alone\nWith every tear, I'll water the seeds of a brand new start\nAnd though you're gone, I'll heal this broken heart\n\n[outro]\nThe sun will shine again, brighter than before\nI'll open up my wings and soar",
+    "tags": "sad,comforting,acoustic,guitar,soft vocals",
+    "audio_path": "history/audio/output_output_20250913160420_0.wav",
+    "duration": 105,
+    "metadata": {
+      "source": "output",
+      "input_params_path": "outputs/output_20250913160420_0_input_params.json"
+    },
+    "display": "20251207_185329 - [verse]"
+  },
+  {
+    "id": "output_output_20250913201612_0",
+    "timestamp": "20251207_185329",
+    "label": "[verse]",
+    "lyrics": "[verse]\nIn the realm of sound, a new dawn breaks\nA system awakens, its purpose takes shape\nProactive and wise, it listens, it learns\nThrough dialogue rich, its vision burns\n\n[chorus]\nTechno beats pulse through circuits and wires\nFuturistic dreams fueled by user's desires\nProgressive steps crafting each note and line\nTogether we create, your thoughts intertwine\n\n[verse]\nEmotions unfold, genres blend and sway\nLyrics form from words you have to say\nEvery detail refined, every aspect clear\nAlignment achieved, music draws near\n\n[bridge]\nMulti-turn talks guide the path we tread\nNuances captured, where once was dread\nIntentions understood, visions align\nCreation perfected, your masterpiece signed\n\n[chorus]\nTechno beats pulse through circuits and wires\nFuturistic dreams fueled by user's desires\nProgressive steps crafting each note and line\nTogether we create, your thoughts intertwine\n\n[outro]\nA proactive agent, in music's embrace\nCreating symphonies, exploring space\nWith every interaction, innovation grows\nIn this world of sound, infinite music flows",
+    "tags": "techno, futuristic, dialogue, music generation, proactive, agentic, progressive",
+    "audio_path": "history/audio/output_output_20250913201612_0.wav",
+    "duration": 98,
+    "metadata": {
+      "source": "output",
+      "input_params_path": "outputs/output_20250913201612_0_input_params.json"
+    },
+    "display": "20251207_185329 - [verse]"
+  },
+  {
+    "id": "output_output_20250913202305_0",
+    "timestamp": "20251207_185329",
+    "label": "[verse]",
+    "lyrics": "[verse]\nIn the realm of sound, a new dawn breaks\nA system awakens, its purpose takes shape\nProactive and wise, it listens, it learns\nThrough dialogue rich, its vision burns\n\n[chorus]\nTechno beats pulse through circuits and wires\nFuturistic dreams fueled by user's desires\nProgressive steps crafting each note and line\nTogether we create, your thoughts intertwine\n\n[verse]\nEmotions unfold, genres blend and sway\nLyrics form from words you have to say\nEvery detail refined, every aspect clear\nAlignment achieved, music draws near\n\n[bridge]\nMulti-turn talks guide the path we tread\nNuances captured, where once was dread\nIntentions understood, visions align\nCreation perfected, your masterpiece signed\n\n[chorus]\nTechno beats pulse through circuits and wires\nFuturistic dreams fueled by user's desires\nProgressive steps crafting each note and line\nTogether we create, your thoughts intertwine\n\n[outro]\nA proactive agent, in music's embrace\nCreating symphonies, exploring space\nWith every interaction, innovation grows\nIn this world of sound, infinite music flows",
+    "tags": "techno, futuristic, dialogue, music generation, proactive, agentic, progressive",
+    "audio_path": "history/audio/output_output_20250913202305_0.wav",
+    "duration": 98,
+    "metadata": {
+      "source": "output",
+      "input_params_path": "outputs/output_20250913202305_0_input_params.json"
+    },
+    "display": "20251207_185329 - [verse]"
+  }
+]

@@ -15,12 +15,13 @@ from pydantic import BaseModel, Field
 
 from assistant import assistant
 from history import (
-    HISTORY_AUDIO_DIR,
     ensure_history_storage,
     find_history_entry_by_display,
     find_history_entry_by_id,
     log_audio_snapshot,
     read_history_entries,
+    seed_default_demo_history,
+    seed_outputs_history,
 )
 from pipeline import pipe
 
@@ -38,24 +39,26 @@ class ChatRequest(BaseModel):
     lyrics: str = ""
     tags: str = ""
     path: str = ""
+    nickname: Optional[str] = None
 
 
 class GenerateRequest(BaseModel):
     lyrics: str
     tags: str
     length: float = 60.0
+    nickname: Optional[str] = None
 
 
 class HistorySelection(BaseModel):
     display: str
 
 
-def _log_if_needed(path, lyrics, tags, previous_path=None, duration=None):
+def _log_if_needed(path, lyrics, tags, previous_path=None, duration=None, nickname=None, chat_history=None):
     if not path or path in ('', 'blank.wav'):
         return None
     if previous_path and previous_path == path:
         return None
-    return log_audio_snapshot(path, lyrics, tags, duration=duration)
+    return log_audio_snapshot(path, lyrics, tags, duration=duration, nickname=nickname, chat_history=chat_history)
 
 
 def _assistant_chat(req: ChatRequest):
@@ -68,7 +71,14 @@ def _assistant_chat(req: ChatRequest):
     messages = list(req.history)
     messages.append({'role': 'user', 'content': req.message})
     response = assistant.run_nonstream(messages=messages, var_dict=var_dict)
-    entry = _log_if_needed(var_dict['path'], var_dict['lyrics'], var_dict['tags'], previous_path=req.path)
+    entry = _log_if_needed(
+        var_dict['path'],
+        var_dict['lyrics'],
+        var_dict['tags'],
+        previous_path=req.path,
+        nickname=req.nickname,
+        chat_history=messages + [{'role': 'assistant', 'content': response}],
+    )
     return response, var_dict, entry
 
 
@@ -98,7 +108,7 @@ def generate_endpoint(req: GenerateRequest):
         prompt=req.tags,
         lyrics=req.lyrics,
     )
-    entry = log_audio_snapshot(outputs[0], req.lyrics, req.tags, duration=req.length)
+    entry = log_audio_snapshot(outputs[0], req.lyrics, req.tags, duration=req.length, nickname=req.nickname)
     return {
         'audio_path': outputs[0],
         'history_entry': entry,
@@ -141,6 +151,8 @@ def load_history_entry(selection: HistorySelection):
 
 
 ensure_history_storage()
+seed_default_demo_history()
+seed_outputs_history()
 
 
 if __name__ == "__main__":
