@@ -33,11 +33,11 @@ class GetPreference(BaseTool):
 
 @register_tool('param_setter')
 class SetParam(BaseTool):
-    description = 'setting a parameter of the song, including the tags and the lyrics'
+    description = 'setting a parameter of the song, including the tags, the lyrics, or the title'
     parameters = [{
         'name': 'name',
         'type': 'string',
-        'description': 'the name of the parameter, either "tags" or "lyrics"',
+        'description': 'the name of the parameter, either "tags", "lyrics", or "title"',
         'required': True
     },{
         'name': 'value',

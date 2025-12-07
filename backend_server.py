@@ -39,26 +39,39 @@ class ChatRequest(BaseModel):
     lyrics: str = ""
     tags: str = ""
     path: str = ""
-    nickname: Optional[str] = None
+    title: Optional[str] = None
 
 
 class GenerateRequest(BaseModel):
     lyrics: str
     tags: str
     length: float = 60.0
-    nickname: Optional[str] = None
+    title: Optional[str] = None
 
 
 class HistorySelection(BaseModel):
     display: str
 
 
-def _log_if_needed(path, lyrics, tags, previous_path=None, duration=None, nickname=None, chat_history=None):
+def _derive_song_title(candidate, lyrics, tags):
+    if candidate and candidate.strip():
+        return candidate.strip()
+    for line in lyrics.splitlines():
+        stripped = line.strip()
+        if stripped:
+            return stripped[:80]
+    tag_tokens = [t.strip() for t in tags.split(',') if t.strip()]
+    if tag_tokens:
+        return f"{tag_tokens[0].title()} Vibe"
+    return "Untitled Vibe"
+
+
+def _log_if_needed(path, lyrics, tags, previous_path=None, duration=None, title=None, chat_history=None):
     if not path or path in ('', 'blank.wav'):
         return None
     if previous_path and previous_path == path:
         return None
-    return log_audio_snapshot(path, lyrics, tags, duration=duration, nickname=nickname, chat_history=chat_history)
+    return log_audio_snapshot(path, lyrics, tags, duration=duration, song_title=title, chat_history=chat_history)
 
 
 def _assistant_chat(req: ChatRequest):
@@ -67,16 +80,19 @@ def _assistant_chat(req: ChatRequest):
         'lyrics': req.lyrics,
         'tags': req.tags,
         'path': req.path,
+        'title': req.title or '',
     }
     messages = list(req.history)
     messages.append({'role': 'user', 'content': req.message})
     response = assistant.run_nonstream(messages=messages, var_dict=var_dict)
+    song_title = _derive_song_title(var_dict.get('title'), var_dict['lyrics'], var_dict['tags'])
+    var_dict['title'] = song_title
     entry = _log_if_needed(
         var_dict['path'],
         var_dict['lyrics'],
         var_dict['tags'],
         previous_path=req.path,
-        nickname=req.nickname,
+        title=song_title,
         chat_history=messages + [{'role': 'assistant', 'content': response}],
     )
     return response, var_dict, entry
@@ -95,6 +111,7 @@ def chat_endpoint(req: ChatRequest):
         'lyrics': var_dict['lyrics'],
         'tags': var_dict['tags'],
         'audio_path': var_dict['path'],
+        'title': var_dict.get('title', ''),
         'history_entry': entry,
         'history_dropdown': [entry['display'] for entry in reversed(read_history_entries())],
     }
@@ -108,9 +125,11 @@ def generate_endpoint(req: GenerateRequest):
         prompt=req.tags,
         lyrics=req.lyrics,
     )
-    entry = log_audio_snapshot(outputs[0], req.lyrics, req.tags, duration=req.length, nickname=req.nickname)
+    song_title = _derive_song_title(req.title, req.lyrics, req.tags)
+    entry = log_audio_snapshot(outputs[0], req.lyrics, req.tags, duration=req.length, song_title=song_title)
     return {
         'audio_path': outputs[0],
+        'title': song_title,
         'history_entry': entry,
     }
 

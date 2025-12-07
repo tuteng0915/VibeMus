@@ -91,10 +91,9 @@ def _slugify_label(text: str) -> str:
 
 def _build_display(entry: Dict) -> str:
     timestamp = entry.get('timestamp') or datetime.now().strftime('%Y%m%d_%H%M%S')
-    nickname = entry.get('nickname')
-    label = nickname or entry.get('label') or entry.get('id') or 'entry'
-    label = label[:60]
-    return f'{timestamp} - {label}'
+    title = entry.get('song_title') or entry.get('nickname') or entry.get('label') or entry.get('id') or 'entry'
+    title = title[:80]
+    return f'{title} · {timestamp}'
 
 
 def _repo_relative(path: Path) -> str:
@@ -123,6 +122,7 @@ def log_audio_snapshot(
     metadata: Optional[Dict] = None,
     input_params_path: Optional[str] = None,
     chat_history: Optional[List[Dict]] = None,
+    song_title: Optional[str] = None,
 ):
     """Persist audio, lyrics, and tags into history storage."""
     if not audio_path or not os.path.exists(audio_path):
@@ -171,6 +171,8 @@ def log_audio_snapshot(
                 updated = True
         if chat_history:
             _update_field('chat_history', chat_history)
+        if song_title:
+            _update_field('song_title', song_title)
         if copy_audio and src_path.exists():
             new_path = _copy_audio_to_history(src_path, existing_entry.get('id'), existing_entry.get('timestamp'))
             if new_path:
@@ -207,6 +209,8 @@ def log_audio_snapshot(
     }
     if nickname:
         entry['nickname'] = nickname
+    if song_title:
+        entry['song_title'] = song_title
     if entry_metadata:
         entry['metadata'] = entry_metadata
     if chat_history:
@@ -284,33 +288,6 @@ def _parse_demo_dialog(path: Path):
     return [m for m in messages if m['content']]
 
 
-def _parse_demo_dialog(path: Path):
-    if not path.exists():
-        return []
-    messages = []
-    current_role = None
-    current_lines = []
-    def _flush():
-        if current_role and current_lines:
-            messages.append({
-                'role': current_role,
-                'content': '\n'.join(current_lines).strip()
-            })
-    with open(path, 'r', encoding='utf-8') as f:
-        for raw in f:
-            line = raw.rstrip('\n')
-            stripped = line.strip()
-            if stripped.endswith(':') and stripped[:-1].lower() in ('user', 'agent'):
-                _flush()
-                role_key = stripped[:-1].lower()
-                current_role = 'user' if role_key == 'user' else 'assistant'
-                current_lines = []
-                continue
-            current_lines.append(line)
-    _flush()
-    return [m for m in messages if m['content']]
-
-
 def seed_history_from_demo(demo_ids: Iterable[str], audio_dir=DEMO_AUDIO_DIR, lyrics_dir=DEMO_LYRICS_DIR):
     ensure_history_storage()
     entries = read_history_entries()
@@ -331,7 +308,8 @@ def seed_history_from_demo(demo_ids: Iterable[str], audio_dir=DEMO_AUDIO_DIR, ly
             audio_path=str(audio_path),
             lyrics=lyrics,
             tags=tags,
-            nickname=f'Demo {demo_id}',
+            nickname=None,
+            song_title=f'Demo {demo_id}',
             entry_id=entry_id,
             metadata={'source': 'demo', 'demo_id': demo_id},
             copy_audio=True,
@@ -375,6 +353,7 @@ def seed_outputs_history():
             entry_id=entry_id,
             metadata={'source': 'output'},
             input_params_path=_repo_relative(json_path),
+            song_title=params.get('title') or params.get('song_title') or wav.stem,
         )
         if entry:
             existing_ids.add(entry['id'])
