@@ -3,6 +3,8 @@
 Chat-driven interface for song creation/editing, with a shared History panel.
 """
 
+from copy import deepcopy
+
 import gradio as gr
 
 from assistant import assistant
@@ -10,12 +12,15 @@ from history import (
     ensure_history_storage,
     find_history_entry_by_display,
     log_audio_snapshot,
+    normalize_chat_history,
     read_history_entries,
     seed_default_demo_history,
     seed_outputs_history,
 )
 from pipeline import pipe
 # from qwen_audio import ask_qwen_audio
+
+_latest_chat_transcript = []
 
 
 def _history_dropdown_state(selected=None):
@@ -58,43 +63,30 @@ def _history_preview_text(selected_display=None):
     if not target:
         target = entries[0]
     title = target.get('song_title') or target.get('nickname') or target.get('label') or 'entry'
-    duration = target.get('duration')
-    prompt_line = target.get('tags', '').splitlines()
-    prompt_line = prompt_line[0] if prompt_line else target.get('tags', '')
+    tags_text = target.get('tags', '').strip()
     lyric_preview = target.get('lyrics', '').splitlines()
-    lyric_preview = '\n'.join(lyric_preview[:4])
-    meta = target.get('metadata', {})
-    meta_bits = []
-    if duration:
-        meta_bits.append(f"{int(duration)}s")
-    if meta.get('source') == 'demo':
-        meta_bits.append('demo')
-    if meta.get('input_params_path'):
-        meta_bits.append(meta['input_params_path'])
-    meta_str = ', '.join(meta_bits)
-    lines = [f"**{title}** ({target['timestamp']})"]
-    if prompt_line:
-        lines.append(f"Tags: {prompt_line}")
+    lyric_preview = '\n'.join(lyric_preview[:6])
+    lines = [f"**{title}**" if title else "**Saved take**"]
+    if tags_text:
+        lines.append("**Tags**\n```\n" + tags_text + "\n```")
     if lyric_preview:
-        lines.append("Lyrics preview:\n```\n" + lyric_preview + "\n```")
-    if meta_str:
-        lines.append(f"*{meta_str}*")
-    chat_history = target.get('chat_history') or []
-    if chat_history:
-        snippet = []
-        for msg in chat_history[-4:]:
-            role = 'User' if msg.get('role') == 'user' else 'Agent'
-            content = msg.get('content', '')
-            if isinstance(content, list):
-                content = '\n'.join(
-                    c if isinstance(c, str) else str(c)
-                    for c in content
-                )
-            content = str(content).strip()
-            if content:
-                snippet.append(f"{role}: {content}")
-        if snippet:
-            lines.append("Conversation excerpt:\n```\n" + "\n---\n".join(snippet) + "\n```")
+        lines.append("**Lyrics**\n```\n" + lyric_preview + "\n```")
+    # chat_history = target.get('chat_history') or []
+    # if chat_history:
+    #     snippet = []
+    #     for msg in chat_history[-4:]:
+    #         role = 'User' if msg.get('role') == 'user' else 'Agent'
+    #         content = msg.get('content', '')
+    #         if isinstance(content, list):
+    #             content = '\n'.join(
+    #                 c if isinstance(c, str) else str(c)
+    #                 for c in content
+    #             )
+    #         content = str(content).strip()
+    #         if content:
+    #             snippet.append(f"{role}: {content}")
+    #     if snippet:
+    #         lines.append("**Chat history**\n```\n" + "\n---\n".join(snippet) + "\n```")
     return '\n\n'.join(lines)
 
 
@@ -152,6 +144,19 @@ seed_default_demo_history()
 seed_outputs_history()
 
 
+def _cache_chat_history(history_blob):
+    """Keep a copy of the latest chat transcript for non-chat callbacks."""
+    global _latest_chat_transcript
+    if history_blob:
+        _latest_chat_transcript = deepcopy(history_blob)
+
+
+def _get_cached_chat_history():
+    if not _latest_chat_transcript:
+        return []
+    return deepcopy(_latest_chat_transcript)
+
+
 def run(message, history, prof, aout, lyr, tg, pth, current_title, history_selection, chat_history_state):
     """Chat handler bridging UI and Assistant tools.
 
@@ -165,7 +170,10 @@ def run(message, history, prof, aout, lyr, tg, pth, current_title, history_selec
         'path': pth,
         'title': current_title,
     }
-    copy = history.copy()
+    clean_history = normalize_chat_history(history)
+    fallback_chat = normalize_chat_history(chat_history_state)
+    base_history = clean_history if clean_history else fallback_chat
+    copy = deepcopy(base_history)
     user_message = {
         'role': 'user',
         'content': message
@@ -181,10 +189,11 @@ def run(message, history, prof, aout, lyr, tg, pth, current_title, history_selec
     summary_update = None
     title_update = gr.update(value=new_title)
     hist_sel = history_selection or None
-    full_history = copy + [{
+    full_history = normalize_chat_history(copy + [{
         'role': 'assistant',
         'content': response
-    }]
+    }])
+    _cache_chat_history(full_history)
     if new_aout and new_aout not in ('', 'blank.wav') and new_aout != pth:
         entry = log_audio_snapshot(new_aout, new_lyr, new_tg, song_title=new_title, chat_history=full_history)
         if entry:
@@ -216,6 +225,7 @@ custom_css = """
 #history-panel {order: 2;}
 """
 
+chatbot_component = None
 with gr.Blocks(css=custom_css) as demo:
     gr.Markdown("""
     <h1 style='text-align: center; margin-top: 0;'>VibeMus</h1>
@@ -261,6 +271,7 @@ with gr.Blocks(css=custom_css) as demo:
                     additional_outputs=[lyrics, tags, audio_output, path_name, history_dropdown, history_summary, song_title, history_selection_state, history_preview, history_chatlog, chat_history_state],
                     fill_height=True,
                 )
+                chatbot_component = getattr(chatbot, 'chatbot', None)
 
     @generate_btn.click(
         inputs=[lyrics, tags, length, song_title, history_selection_state, chat_history_state],
@@ -275,13 +286,16 @@ with gr.Blocks(css=custom_css) as demo:
             lyrics=lyr,
         )
         title_text = _derive_song_title(current_title, lyr, tg)
-        entry = log_audio_snapshot(outputs[0], lyr, tg, duration=lth, song_title=title_text, chat_history=chat_history or [])
+        transcript = normalize_chat_history(chat_history)
+        if not transcript:
+            transcript = _get_cached_chat_history()
+        entry = log_audio_snapshot(outputs[0], lyr, tg, duration=lth, song_title=title_text, chat_history=transcript or None)
         dropdown_update, hist_sel = _history_dropdown_update(entry['display'] if entry else history_selection)
         summary_update = _history_summary_update()
         title_update = gr.update(value=title_text)
         preview_update = _history_preview_update(hist_sel)
         chatlog_update = _history_chatlog_update(hist_sel)
-        return outputs[0], outputs[0], dropdown_update, summary_update, title_update, hist_sel or '', preview_update, chatlog_update, chat_history or []
+        return outputs[0], outputs[0], dropdown_update, summary_update, title_update, hist_sel or '', preview_update, chatlog_update, transcript or []
 
     @history_dropdown.change(inputs=[history_dropdown], outputs=[history_selection_state, history_preview, history_chatlog])
     def on_history_select(selected):
@@ -289,23 +303,31 @@ with gr.Blocks(css=custom_css) as demo:
             return '', _history_preview_update(), _history_chatlog_update()
         return selected, _history_preview_update(selected), _history_chatlog_update(selected)
 
-    @restore_history_btn.click(inputs=[history_dropdown], outputs=[lyrics, tags, audio_output, path_name, song_title, chat_history_state])
+    restore_outputs = [lyrics, tags, audio_output, path_name, song_title, chat_history_state]
+    if chatbot_component is not None:
+        restore_outputs = [chatbot_component] + restore_outputs
+
+    @restore_history_btn.click(inputs=[history_dropdown], outputs=restore_outputs)
     def load_history(selected):
         """Load lyrics/tags/audio from a saved history entry."""
         if not selected:
-            return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
+            return tuple(gr.update() for _ in range(len(restore_outputs)))
         entry = find_history_entry_by_display(selected)
         if not entry:
-            return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
+            return tuple(gr.update() for _ in range(len(restore_outputs)))
         audio_path = entry['audio_path']
-        return (
+        restored_chat = normalize_chat_history(entry.get('chat_history', []))
+        payload = (
             entry['lyrics'],
             entry['tags'],
             audio_path,
             audio_path,
             gr.update(value=entry.get('song_title', '')),
-            entry.get('chat_history', []),
+            restored_chat,
         )
+        if chatbot_component is not None:
+            return (gr.update(value=restored_chat),) + payload
+        return payload
 
     @update_btn.click(inputs=[audio_input, chatbot, lyrics, tags, profile], outputs=profile)
     def baz(audio, chat, lyr, tg, old_profile):

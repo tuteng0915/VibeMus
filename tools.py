@@ -5,10 +5,13 @@ set parameters, transcribe audio, and perform repaint/edit/extend/clip.
 """
 
 import json5
+import logging
 from qwen_agent.tools.base import BaseTool, register_tool
 from pipeline import pipe
 import whisper_timestamped as wsp
 from pydub import AudioSegment
+
+logger = logging.getLogger(__name__)
 
 wsp_model = wsp.load_model("medium")  # loaded once; used by transcriptor
 all_tools = [
@@ -20,6 +23,34 @@ all_tools = [
     'edit_song',
     'clip_song',
 ]
+
+def _textify(value):
+    """Best-effort convert UI/tool inputs into a plain string."""
+    if value is None:
+        return ''
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (list, tuple, set)):
+        parts = [part for part in (_textify(v).strip() for v in value) if part]
+        return '\n'.join(parts)
+    if isinstance(value, dict):
+        try:
+            return json5.dumps(value, ensure_ascii=False)
+        except Exception:
+            return str(value)
+    return str(value)
+
+
+def _ensure_plaintext(value, field_name='value'):
+    text = _textify(value)
+    if not isinstance(text, str):
+        try:
+            text = str(text)
+        except Exception:
+            logger.warning("Failed to stringify %s (type=%s); defaulting to empty string", field_name, type(value).__name__)
+            text = ''
+    return text
+
 
 @register_tool('preference')
 class GetPreference(BaseTool):
@@ -49,7 +80,7 @@ class SetParam(BaseTool):
     def call(self, params, **kwargs) -> str:
         """Set `tags` or `lyrics` field in var_dict."""
         obj = json5.loads(params)
-        kwargs['var_dict'][obj['name']] = obj['value']
+        kwargs['var_dict'][obj['name']] = _ensure_plaintext(obj['value'], obj['name'])
         return f'Successfully set the parameter {obj["name"]}'
 
 @register_tool('transcriptor')
@@ -93,8 +124,8 @@ class SongRepaint(BaseTool):
         end = obj['end']
         var_dict = kwargs['var_dict']
         curr_path = var_dict['path']
-        lyrics = var_dict['lyrics']
-        tags = var_dict['tags']
+        lyrics = _ensure_plaintext(var_dict.get('lyrics'), 'lyrics')
+        tags = _ensure_plaintext(var_dict.get('tags'), 'tags')
         repaint_out = pipe(
             task='repaint',
             src_audio_path=curr_path,
@@ -117,16 +148,20 @@ class SongEdit(BaseTool):
         curr_path = var_dict['path']
         if curr_path == '' or curr_path == 'blank.wav':
             return 'The song is not generated yet, so this tool is currently not available.'
-        lyrics = var_dict['lyrics']
+        lyrics = _ensure_plaintext(var_dict.get('lyrics'), 'lyrics')
         length = AudioSegment.from_file(curr_path).duration_seconds
-        tags = var_dict['tags']
-        edit_out = pipe(
-            task='edit',
-            src_audio_path=curr_path,
-            edit_target_lyrics=lyrics,
-            edit_target_prompt=tags,
-            audio_duration=length,
-        )
+        tags = _ensure_plaintext(var_dict.get('tags'), 'tags')
+        try:
+            edit_out = pipe(
+                task='edit',
+                src_audio_path=curr_path,
+                edit_target_lyrics=lyrics,
+                edit_target_prompt=tags,
+                audio_duration=length,
+            )
+        except ValueError as exc:
+            logger.error("edit_song received unsupported text payloads (lyrics_type=%s, tags_type=%s)", type(lyrics).__name__, type(tags).__name__)
+            return f'edit failed: {exc}'
         var_dict['path'] = edit_out[0]
         return 'Successfully edited.'
 
@@ -150,8 +185,8 @@ class SongExtend(BaseTool):
         var_dict = kwargs['var_dict']
         obj = json5.loads(params)
         curr_path = var_dict['path']
-        lyrics = var_dict['lyrics']
-        tags = var_dict['tags']
+        lyrics = _ensure_plaintext(var_dict.get('lyrics'), 'lyrics')
+        tags = _ensure_plaintext(var_dict.get('tags'), 'tags')
         length = AudioSegment.from_file(curr_path).duration_seconds
         try:
             extend_out = pipe(

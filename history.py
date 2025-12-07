@@ -39,6 +39,7 @@ __all__ = [
     'seed_history_from_demo',
     'seed_default_demo_history',
     'seed_outputs_history',
+    'normalize_chat_history',
 ]
 
 
@@ -64,6 +65,8 @@ def read_history_entries() -> List[Dict]:
         if _ensure_audio_local(entry):
             changed = True
         if _ensure_demo_chat(entry):
+            changed = True
+        if _normalize_entry_chat(entry):
             changed = True
     if changed:
         write_history_entries(entries)
@@ -111,6 +114,39 @@ def _get_audio_duration_seconds(path: str):
         return None
 
 
+def _stringify_chat_content(payload):
+    if payload is None:
+        return ''
+    if isinstance(payload, str):
+        return payload
+    if isinstance(payload, dict):
+        if 'content' in payload:
+            return _stringify_chat_content(payload['content'])
+        if 'text' in payload:
+            return _stringify_chat_content(payload['text'])
+        return ''
+    if isinstance(payload, (list, tuple)):
+        parts = [_stringify_chat_content(item).strip() for item in payload]
+        return '\n'.join([part for part in parts if part])
+    return str(payload)
+
+
+def normalize_chat_history(messages) -> List[Dict]:
+    cleaned = []
+    if not messages:
+        return cleaned
+    for msg in messages:
+        if not isinstance(msg, dict):
+            continue
+        role = msg.get('role') or 'assistant'
+        content = _stringify_chat_content(msg.get('content'))
+        content = (content or '').strip()
+        if not content:
+            continue
+        cleaned.append({'role': role, 'content': content})
+    return cleaned
+
+
 def log_audio_snapshot(
     audio_path,
     lyrics,
@@ -129,6 +165,9 @@ def log_audio_snapshot(
         return None
 
     ensure_history_storage()
+    normalized_chat = None
+    if chat_history is not None:
+        normalized_chat = normalize_chat_history(chat_history)
     entries = read_history_entries()
     existing_entry = None
     if entry_id:
@@ -169,8 +208,8 @@ def log_audio_snapshot(
             if merged != before:
                 existing_entry['metadata'] = merged
                 updated = True
-        if chat_history:
-            _update_field('chat_history', chat_history)
+        if normalized_chat is not None:
+            _update_field('chat_history', normalized_chat)
         if song_title:
             _update_field('song_title', song_title)
         if copy_audio and src_path.exists():
@@ -213,8 +252,8 @@ def log_audio_snapshot(
         entry['song_title'] = song_title
     if entry_metadata:
         entry['metadata'] = entry_metadata
-    if chat_history:
-        entry['chat_history'] = chat_history
+    if normalized_chat:
+        entry['chat_history'] = normalized_chat
     entry['display'] = _build_display(entry)
     entries.append(entry)
     write_history_entries(entries)
@@ -416,4 +455,17 @@ def _ensure_demo_chat(entry: Dict) -> bool:
     if not chat_history:
         return False
     entry['chat_history'] = chat_history
+    return True
+
+
+def _normalize_entry_chat(entry: Dict) -> bool:
+    if 'chat_history' not in entry:
+        return False
+    normalized = normalize_chat_history(entry.get('chat_history'))
+    if normalized == entry.get('chat_history'):
+        return False
+    if normalized:
+        entry['chat_history'] = normalized
+    else:
+        entry.pop('chat_history', None)
     return True
