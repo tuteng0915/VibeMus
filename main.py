@@ -124,8 +124,8 @@ def _history_chatlog_update(selected_display=None):
 
 
 ensure_history_storage()
-seed_default_demo_history()
-seed_outputs_history()
+# seed_default_demo_history()
+# seed_outputs_history()
 
 
 def run(message, history, prof, aout, lyr, tg, pth, nickname, history_selection):
