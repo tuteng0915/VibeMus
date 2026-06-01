@@ -1,5 +1,6 @@
 {
-    "model": "qwen-max-latest",
+    "model": "qwen-plus",
     "model_type": "qwen_dashscope",
-    "api_key": ""
+    "api_key": "",
+    "base_http_api_url": "https://dashscope.aliyuncs.com/api/v1"
 }
